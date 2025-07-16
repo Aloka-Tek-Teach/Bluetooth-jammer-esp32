@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Bluetooth Jammer Flasher</title>
+  <style>
+    /* --- General Styling & Animated Background --- */
+    :root {
+      --primary-color: #00ffff; /* Cyan */
+      --secondary-color: #ffffff; /* White */
+      --background-color: #0d1117; /* Dark Navy/Black */
+      --content-background: rgba(18, 24, 39, 0.85); /* Semi-transparent dark blue */
+      --border-color: rgba(0, 255, 255, 0.3);
+      --shadow-color: rgba(0, 255, 255, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
+      background-color: var(--background-color);
+      color: var(--secondary-color);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden; /* Hide scrollbars caused by canvas */
+    }
+
+    #particle-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1; /* Place canvas behind everything */
+    }
+
+    /* --- Content Box --- */
+    .content {
+      background-color: var(--content-background);
+      padding: 2rem 3rem;
+      border-radius: 15px;
+      border: 1px solid var(--border-color);
+      box-shadow: 0 0 25px var(--shadow-color);
+      backdrop-filter: blur(10px); /* Frosted glass effect */
+      max-width: 90%;
+      width: 600px;
+      text-align: center;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      margin-bottom: 0.5rem;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    p {
+      margin-bottom: 1.5rem;
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* --- Radio Button List --- */
+    .radios {
+      list-style: none;
+      margin-bottom: 2rem;
+      text-align: left;
+    }
+
+    .radios li {
+      margin-bottom: 1rem;
+    }
+
+    .radios label {
+      display: block;
+      padding: 1rem;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .radios label:hover {
+        background-color: rgba(0, 255, 255, 0.1);
+    }
+
+    .radios li:has(input[type="radio"]:checked) label {
+      background-color: var(--primary-color);
+      border-color: var(--primary-color);
+      color: var(--background-color);
+      font-weight: bold;
+    }
+
+    .radios input[type="radio"] {
+      display: none; /* Hide the default radio button */
+    }
+    
+    /* --- Install Button --- */
+    .button-row {
+        height: 50px; /* Reserve space for the button */
+    }
+
+    esp-web-install-button {
+      --esp-web-install-button-color: var(--primary-color);
+      --esp-web-install-button-text-color: var(--background-color);
+      --esp-web-install-button-border-radius: 8px;
+      --esp-web-install-button-font-size: 1.1rem;
+      transition: opacity 0.4s ease;
+      font-weight: bold;
+    }
+    
+    esp-web-install-button.invisible {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* --- Footer --- */
+    .footer {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border-color);
+      font-size: 0.9rem;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    .footer a {
+      color: var(--primary-color);
+      text-decoration: none;
+      font-weight: 500;
+      transition: text-shadow 0.3s;
+    }
+    
+    .footer a:hover {
+        text-shadow: 0 0 5px var(--primary-color);
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particle-canvas"></canvas>
+
+  <div class="content">
+    <h1>BLUETOOTH Jammer Flasher</h1>
+    <p>Choose your hardware to flash</p>
+    
+    <ul class="radios">
+      <li>
+        <label>
+          <input type="radio" name="type" value="Ble1" /> Single Nrf24l01 Vspi (SCK=18, MISO=19, MOSI=23, CS=21, CE=22)
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="radio" name="type" value="Ble2" /> Dual Nrf24l01 Vspi and Hspi pins
+        </label>
+      </li>
+      <li>
+        <label>
+          <input type="radio" name="type" value="Ble3" /> Single Nrf24l01 Hspi (SCK=14, MISO=12, MOSI=13, CS=15, CE=16)
+        </label>
+      </li>
+    </ul>
+
+    <p class="button-row" align="center">
+      <esp-web-install-button manifest="" class="invisible"></esp-web-install-button>
+    </p>
+
+    <div class="footer">
+      Developed by <b>Aloka Tek Teach</b> ✨
+      <br><br>
+      You can contact to buy our Kit
+      <a href="https://wa.me/+94740310879">ALOKA TEK TEACH</a>
+    </div>
+  </div>
+
+  <script type="module" src="https://unpkg.com/esp-web-tools@9/dist/web/install-button.js?module"></script>
+
+  <script>
+    // --- ORIGINAL SCRIPT FOR BUTTON FUNCTIONALITY ---
+    document.querySelectorAll('input[name="type"]').forEach(radio =>
+      radio.addEventListener("change", () => {
+        const button = document.querySelector('esp-web-install-button');
+        // This assumes your manifest files are in a 'web' subfolder.
+        // Adjust the path if necessary.
+        button.manifest = `web/manifest_${radio.value}.json`;
+        button.classList.remove('invisible');
+      })
+    );
+
+    // --- NEW SCRIPT FOR ANIMATED PARTICLE BACKGROUND ---
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let particlesArray;
+
+    // Set canvas size to fill the window
+    function setCanvasSize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    setCanvasSize();
+
+    // Particle class
+    class Particle {
+      constructor(x, y, directionX, directionY, size, color) {
+        this.x = x;
+        this.y = y;
+        this.directionX = directionX;
+        this.directionY = directionY;
+        this.size = size;
+        this.color = color;
+      }
+      // Method to draw individual particle
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = 'rgba(0, 255, 255, 0.5)';
+        ctx.fill();
+      }
+      // Method to update particle position
+      update() {
+        if (this.x > canvas.width || this.x < 0) {
+          this.directionX = -this.directionX;
+        }
+        if (this.y > canvas.height || this.y < 0) {
+          this.directionY = -this.directionY;
+        }
+        this.x += this.directionX;
+        this.y += this.directionY;
+        this.draw();
+      }
+    }
+
+    // Create particle array
+    function init() {
+      particlesArray = [];
+      let numberOfParticles = (canvas.height * canvas.width) / 9000;
+      for (let i = 0; i < numberOfParticles; i++) {
+        let size = (Math.random() * 2) + 1;
+        let x = (Math.random() * ((innerWidth - size * 2) - (size * 2)) + size * 2);
+        let y = (Math.random() * ((innerHeight - size * 2) - (size * 2)) + size * 2);
+        let directionX = (Math.random() * .4) - .2;
+        let directionY = (Math.random() * .4) - .2;
+        let color = 'rgba(0, 255, 255, 0.8)';
+        particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
+      }
+    }
+
+    // Animation loop
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+      }
+      connect();
+    }
+    
+    // Function to draw lines between nearby particles
+    function connect() {
+        let opacityValue = 1;
+        for (let a = 0; a < particlesArray.length; a++) {
+            for (let b = a; b < particlesArray.length; b++) {
+                let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) +
+                               ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+                if (distance < (canvas.width/7) * (canvas.height/7)) {
+                    opacityValue = 1 - (distance/20000);
+                    ctx.strokeStyle = `rgba(0, 255, 255, ${opacityValue})`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+                    ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+                    ctx.stroke();
+                }
+            }
+        }
+    }
+
+    // Event listener for window resize
+    window.addEventListener('resize', () => {
+        setCanvasSize();
+        init();
+    });
+
+    init();
+    animate();
+  </script>
+</body>
+</html>
